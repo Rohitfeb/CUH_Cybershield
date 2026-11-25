@@ -1,0 +1,34 @@
+# Render Blueprint for CUH Cyber Shield.
+# Put this file in the ROOT of your repo, then: Render Dashboard -> New -> Blueprint.
+# Password-reset email goes through Brevo's HTTPS API (Render free blocks SMTP).
+# Variables marked "sync: false" are asked for in the dashboard (never commit secrets).
+services:
+  - type: web
+    name: cuh-cybershield
+    runtime: docker            # uses your existing Dockerfile (Python 3.13 + gunicorn)
+    dockerfilePath: ./Dockerfile
+    plan: free                 # free = sleeps after 15 min idle, files are wiped on restart
+    healthCheckPath: /health
+    envVars:
+      - key: DEPLOYMENT_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true    # Render generates a long random key and keeps it stable
+      - key: DATABASE_URL
+        sync: false            # paste your Neon/Render Postgres URL (see note below)
+      - key: RESET_BASE_URL
+        sync: false            # e.g. https://cuh-cybershield.onrender.com (no trailing slash)
+      - key: INCIDENT_UPLOAD_FOLDER
+        value: /tmp/incident_uploads   # ephemeral on free plan; use a paid disk to keep files
+      - key: BREVO_API_KEY
+        sync: false            # Brevo API key (SMTP is blocked on Render's free plan)
+      - key: MAIL_DEFAULT_SENDER
+        sync: false            # sender address you verified in Brevo
+      - key: TRUST_PROXY_HOPS
+        value: "1"             # Render sits behind one proxy: lets rate limits see real client IPs
+      - key: WEB_CONCURRENCY
+        value: "1"             # 1 worker: ML models + 2 workers can exceed the 512 MB free limit

@@ -40,6 +40,11 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")
+    # HTTPS email API (Brevo). Use this on hosts that block SMTP ports,
+    # such as Render's free plan. When set, it is used instead of SMTP.
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
+    # Number of reverse proxies in front of the app (Render = 1, local = 0).
+    TRUST_PROXY_HOPS = int(os.environ.get("TRUST_PROXY_HOPS", "0"))
     MAX_CONTENT_LENGTH = 6 * 1024 * 1024
     EMAIL_CHECKER_MAX_FILE_BYTES = 2 * 1024 * 1024
     INCIDENT_UPLOAD_MAX_BYTES = 5 * 1024 * 1024
@@ -72,8 +77,10 @@ def validate_deployment_config(config):
         errors.append("SESSION_COOKIE_SECURE must be enabled in production.")
     if not str(config.get("RESET_BASE_URL", "")).startswith("https://"):
         errors.append("RESET_BASE_URL must be a public HTTPS URL.")
-    if not config.get("MAIL_SERVER"):
-        errors.append("MAIL_SERVER must be configured in production.")
+    if not (config.get("MAIL_SERVER") or config.get("BREVO_API_KEY")):
+        errors.append(
+            "MAIL_SERVER or BREVO_API_KEY must be configured in production."
+        )
     if not (
         config.get("MAIL_DEFAULT_SENDER")
         or config.get("MAIL_USERNAME")

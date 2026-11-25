@@ -157,3 +157,7 @@ postgresql+psycopg://username:password@host:5432/cybershield
 SQLite remains available for local development. Back up the production database
 through the database provider and use persistent storage or an external database
 service.
+
+## Deploying on Render (free) with Neon + Brevo
+
+See `DEPLOY_RENDER.md` for the step-by-step guide, `render.yaml` for the Render blueprint, and `.env.example` for the production variables. Use `recover_account.py` to reset a password directly in a local SQLite database and `create_super_admin.py` to create the first super admin in a new (e.g. Neon) database.

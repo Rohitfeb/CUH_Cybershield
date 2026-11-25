@@ -26,6 +26,8 @@ from email.parser import BytesParser
 from flask import make_response
 from quiz_questions import quiz_questions
 from urllib.parse import urlsplit
+import urllib.error
+import urllib.request
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -68,6 +70,18 @@ from utils.url_detector import extract_url_features
 app = Flask(__name__)
 
 app.config.from_object(Config)
+
+if app.config["TRUST_PROXY_HOPS"] > 0:
+    # Behind a reverse proxy (e.g. Render) the real client IP and scheme arrive
+    # in X-Forwarded-* headers. Without this, rate limiting sees one shared IP.
+    from werkzeug.middleware.proxy_fix import ProxyFix
+
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=app.config["TRUST_PROXY_HOPS"],
+        x_proto=app.config["TRUST_PROXY_HOPS"],
+        x_host=app.config["TRUST_PROXY_HOPS"],
+    )
 
 
 class JsonFormatter(logging.Formatter):
@@ -257,7 +271,50 @@ def _password_hash_fingerprint(user):
     return hashlib.sha256(user.password_hash.encode("utf-8")).hexdigest()
 
 
+def _send_reset_email_via_brevo(user, reset_url, sender, api_key):
+    payload = {
+        "sender": {"name": "CUH Cyber Shield", "email": sender},
+        "to": [{"email": user.email}],
+        "subject": "Reset your CUH Cyber Shield password",
+        "textContent": (
+            "We received a request to reset your CUH Cyber Shield password.\n\n"
+            f"Use this link within 30 minutes:\n{reset_url}\n\n"
+            "If you did not request this, you can ignore this email."
+        ),
+    }
+    request_obj = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "api-key": api_key,
+            "accept": "application/json",
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request_obj, timeout=15):
+            pass
+    except urllib.error.HTTPError as error:
+        # HTTPError is an OSError, so the caller's existing handler logs it.
+        detail = error.read(300).decode("utf-8", "replace")
+        raise OSError(
+            f"Brevo API returned HTTP {error.code}: {detail}"
+        ) from error
+
+
 def _send_password_reset_email(user, reset_url):
+    brevo_key = current_app.config.get("BREVO_API_KEY")
+    if brevo_key:
+        brevo_sender = (
+            current_app.config.get("MAIL_DEFAULT_SENDER")
+            or current_app.config.get("MAIL_USERNAME")
+        )
+        if not brevo_sender:
+            raise RuntimeError("Password reset email is not configured.")
+        _send_reset_email_via_brevo(user, reset_url, brevo_sender, brevo_key)
+        return
+
     mail_server = current_app.config.get("MAIL_SERVER")
     mail_sender = (
         current_app.config.get("MAIL_DEFAULT_SENDER")
@@ -543,6 +600,12 @@ def forgot_password():
         )
     )
     mail_delivery_configured = bool(
+        current_app.config.get("BREVO_API_KEY")
+        and (
+            current_app.config.get("MAIL_DEFAULT_SENDER")
+            or current_app.config.get("MAIL_USERNAME")
+        )
+    ) or bool(
         current_app.config.get("MAIL_SERVER")
         and (
             current_app.config.get("MAIL_DEFAULT_SENDER")

@@ -1,6 +1,8 @@
+import json
 import os
 import re
 import unittest
+import urllib.error
 from urllib.parse import urlparse
 from unittest.mock import MagicMock, patch
 
@@ -22,7 +24,8 @@ class PasswordResetTests(unittest.TestCase):
             MAIL_SERVER=None,
             MAIL_USERNAME=None,
             MAIL_PASSWORD=None,
-            MAIL_DEFAULT_SENDER=None
+            MAIL_DEFAULT_SENDER=None,
+            BREVO_API_KEY=None
         )
         self.client = self.app.test_client()
         with self.app.app_context():
@@ -124,6 +127,80 @@ class PasswordResetTests(unittest.TestCase):
             "Continue to set new password",
             response.get_data(as_text=True)
         )
+
+    def test_brevo_api_is_used_when_key_is_configured(self):
+        config = {
+            "BREVO_API_KEY": "test-brevo-key",
+            "MAIL_DEFAULT_SENDER": "sender@example.com",
+            "RESET_BASE_URL": "https://cybershield.example",
+        }
+        with patch.dict(self.app.config, config), patch(
+            "app.urllib.request.urlopen"
+        ) as urlopen:
+            response = self.client.post(
+                "/forgot-password",
+                data={"email": "test@example.com"}
+            )
+
+        self.assertEqual(response.status_code, 200)
+        urlopen.assert_called_once()
+        request_obj = urlopen.call_args.args[0]
+        self.assertEqual(
+            request_obj.full_url, "https://api.brevo.com/v3/smtp/email"
+        )
+        self.assertEqual(request_obj.get_header("Api-key"), "test-brevo-key")
+        body = json.loads(request_obj.data)
+        self.assertEqual(body["sender"]["email"], "sender@example.com")
+        self.assertEqual(body["to"], [{"email": "test@example.com"}])
+        self.assertIn(
+            "https://cybershield.example/reset-password/",
+            body["textContent"]
+        )
+        self.assertNotIn(
+            "reset-password/", response.get_data(as_text=True)
+        )
+
+    def test_brevo_api_failure_does_not_break_or_leak_reset_link(self):
+        config = {
+            "BREVO_API_KEY": "test-brevo-key",
+            "MAIL_DEFAULT_SENDER": "sender@example.com",
+            "RESET_BASE_URL": "https://cybershield.example",
+            "DEPLOYMENT_ENV": "production",
+        }
+        error = urllib.error.HTTPError(
+            "https://api.brevo.com/v3/smtp/email", 401, "Unauthorized", {},
+            None
+        )
+        error.read = lambda n=-1: b'{"message":"Key not found"}'
+        with patch.dict(self.app.config, config), patch(
+            "app.urllib.request.urlopen", side_effect=error
+        ):
+            response = self.client.post(
+                "/forgot-password",
+                data={"email": "test@example.com"}
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(
+            "reset-password/", response.get_data(as_text=True)
+        )
+
+    def test_brevo_without_sender_is_not_attempted(self):
+        config = {
+            "BREVO_API_KEY": "test-brevo-key",
+            "RESET_BASE_URL": "https://cybershield.example",
+            "DEPLOYMENT_ENV": "production",
+        }
+        with patch.dict(self.app.config, config), patch(
+            "app.urllib.request.urlopen"
+        ) as urlopen:
+            response = self.client.post(
+                "/forgot-password",
+                data={"email": "test@example.com"}
+            )
+
+        self.assertEqual(response.status_code, 200)
+        urlopen.assert_not_called()
 
     def test_configured_mail_route_attempts_delivery(self):
         config = {

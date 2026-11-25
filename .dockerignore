@@ -1,8 +1,13 @@
 .git
 .gitignore
 .env
+.env.*
 .venv
 __pycache__
 *.py[cod]
 instance
 tests
+*.exe
+*.zip
+recover_account.py
+create_super_admin.py

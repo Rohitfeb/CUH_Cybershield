@@ -52,8 +52,11 @@ def check_release():
     ):
         errors.append("SESSION_COOKIE_SECURE must be enabled.")
 
-    if not os.environ.get("MAIL_SERVER", "").strip():
-        errors.append("MAIL_SERVER must be configured.")
+    if not (
+        os.environ.get("MAIL_SERVER", "").strip()
+        or os.environ.get("BREVO_API_KEY", "").strip()
+    ):
+        errors.append("MAIL_SERVER or BREVO_API_KEY must be configured.")
     if not (
         os.environ.get("MAIL_DEFAULT_SENDER", "").strip()
         or os.environ.get("MAIL_USERNAME", "").strip()
@@ -88,6 +91,7 @@ if __name__ == "__main__":
         "MAIL_USERNAME",
         "MAIL_PASSWORD",
         "MAIL_DEFAULT_SENDER",
+        "BREVO_API_KEY",
     ):
         test_environment.pop(mail_setting, None)
     result = subprocess.run(
