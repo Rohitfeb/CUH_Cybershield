@@ -1,0 +1,56 @@
+
+{% extends "base.html" %}
+
+{% block title %}Register | CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="auth-container">
+
+    <h2>Create Your Account</h2>
+
+    <p>Join CUH Cyber Shield</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <p class="message">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <input type="text"
+               name="name"
+               placeholder="Full Name"
+               required>
+
+        <input type="email"
+               name="email"
+               placeholder="University Email"
+               required>
+
+        <input type="password"
+               id="register-password"
+               name="password"
+               placeholder="Password (minimum 8 characters)"
+               minlength="8"
+               required>
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
+                data-toggle-password="register-password"
+                aria-controls="register-password"
+                aria-pressed="false">
+            Show password
+        </button>
+
+        <button type="submit">Register</button>
+
+    </form>
+
+    <p>Already registered?
+        <a href="{{ url_for('login') }}">Login</a>
+    </p>
+
+</div>
+
+{% endblock %}

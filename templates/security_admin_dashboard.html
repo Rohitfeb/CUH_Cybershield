@@ -1,0 +1,463 @@
+
+{% extends "base.html" %}
+
+{% block title %}Security Admin Dashboard - CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+
+        <div>
+            <h2 class="fw-bold">Security Admin Dashboard</h2>
+            <p class="text-muted">
+                Review, investigate and manage cyber incident reports.
+            </p>
+        </div>
+
+        <span class="badge bg-danger fs-6 p-2">
+            Security Administrator
+        </span>
+
+    </div>
+
+    <!-- Incident Statistics -->
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Reports</h6>
+                    <h2 class="fw-bold text-primary">
+                        {{ total_reports }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Pending</h6>
+                    <h2 class="fw-bold text-warning">
+                        {{ pending_reports }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Under Review</h6>
+                    <h2 class="fw-bold text-info">
+                        {{ under_review_reports }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Resolved</h6>
+                    <h2 class="fw-bold text-success">
+                        {{ resolved_reports }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Find incident reports</h5>
+            <form method="GET"
+                  action="{{ url_for('security_admin_dashboard') }}"
+                  class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="report-status-filter" class="form-label">
+                        Status
+                    </label>
+                    <select id="report-status-filter"
+                            name="status"
+                            class="form-select">
+                        <option value=""
+                                {% if not selected_status %}selected{% endif %}>
+                            All statuses
+                        </option>
+                        {% for status in ("Pending", "Under Review", "Resolved") %}
+                        <option value="{{ status }}"
+                                {% if selected_status == status %}selected{% endif %}>
+                            {{ status }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="report-severity-filter" class="form-label">
+                        Severity
+                    </label>
+                    <select id="report-severity-filter"
+                            name="severity"
+                            class="form-select">
+                        <option value=""
+                                {% if not selected_severity %}selected{% endif %}>
+                            All severities
+                        </option>
+                        {% for severity in ("Unassigned", "Low", "Medium", "High", "Critical") %}
+                        <option value="{{ severity }}"
+                                {% if selected_severity == severity %}selected{% endif %}>
+                            {{ severity }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="report-search" class="form-label">
+                        Search reports
+                    </label>
+                    <input id="report-search"
+                           name="q"
+                           type="search"
+                           maxlength="120"
+                           class="form-control"
+                           value="{{ report_search }}"
+                           placeholder="Report ID, reporter, email, type, or description">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        Search
+                    </button>
+                    <a href="{{ url_for('security_admin_dashboard') }}"
+                       class="btn btn-outline-secondary">
+                        Clear
+                    </a>
+                </div>
+            </form>
+            <p class="text-muted small mt-3 mb-0">
+                Showing {{ matching_reports }} of {{ total_reports }} reports.
+                Counts above include all reports.
+            </p>
+        </div>
+    </div>
+
+    <!-- Incident Management -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Cyber Incident Management</h5>
+        </div>
+
+        <div class="card-body">
+
+            {% if reports %}
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Reported By</th>
+                            <th>Email</th>
+                            <th>Reporter Role</th>
+                            <th>Incident Type</th>
+                            <th>Description</th>
+                            <th>Reported Date</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Evidence</th>
+                            <th>Internal Investigation Notes</th>
+                            <th>Update Status</th>
+                            <th>Update Severity</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for report in reports %}
+
+                        <tr>
+
+                            <td>{{ report.id }}</td>
+
+                            <td>
+                                {{ report.user.name if report.user else "Unknown" }}
+                            </td>
+
+                            <td>
+                                {{ report.user.email if report.user else "N/A" }}
+                            </td>
+
+                            <td>
+                                {% if report.user %}
+                                    {{ report.user.role|replace("_", " ")|title }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+
+                            <td>{{ report.incident_type }}</td>
+
+                            <td>{{ report.description }}</td>
+
+                            <td>
+                                {% if report.created_at %}
+                                    {{ report.created_at.strftime('%d-%m-%Y %I:%M %p') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+
+                            <td>
+
+                                {% if report.status == "Pending" %}
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+
+                                {% elif report.status == "Under Review" %}
+                                    <span class="badge bg-info text-dark">
+                                        Under Review
+                                    </span>
+
+                                {% elif report.status == "Resolved" %}
+                                    <span class="badge bg-success">
+                                        Resolved
+                                    </span>
+
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        {{ report.status }}
+                                    </span>
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Incident Severity Display -->
+                            <td>
+
+                            {% if report.severity == "Critical" %}
+        <span class="badge bg-danger">Critical</span>
+
+    {% elif report.severity == "High" %}
+        <span class="badge bg-warning text-dark">High</span>
+
+    {% elif report.severity == "Medium" %}
+        <span class="badge bg-info text-dark">Medium</span>
+
+    {% elif report.severity == "Low" %}
+        <span class="badge bg-success">Low</span>
+
+    {% else %}
+        <span class="badge bg-secondary">Unassigned</span>
+    {% endif %}
+
+</td>
+
+                            <td>
+                                {% if report.attachments %}
+                                    {% for attachment in report.attachments %}
+                                        <a class="btn btn-sm btn-outline-primary mb-1"
+                                           href="{{ url_for('download_incident_attachment', attachment_id=attachment.id) }}">
+                                            Download
+                                        </a>
+                                        <small class="d-block text-muted">
+                                            {{ attachment.original_filename }}
+                                        </small>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+
+                            <td style="min-width: 280px;">
+                                <details>
+                                    <summary>
+                                        Notes ({{ report.notes|length }})
+                                    </summary>
+                                    <div class="mt-2">
+                                        {% if report.notes %}
+                                            {% for note in report.notes %}
+                                            <div class="border rounded p-2 mb-2">
+                                                <p class="mb-1">{{ note.note }}</p>
+                                                <small class="text-muted">
+                                                    {{ note.author_name }}
+                                                    {% if note.created_at %}
+                                                        · {{ note.created_at.strftime('%d-%m-%Y %I:%M %p') }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="small text-muted">
+                                                No investigation notes yet.
+                                            </p>
+                                        {% endif %}
+                                        <form method="POST"
+                                              action="{{ url_for('add_incident_note', report_id=report.id) }}">
+                                            <input type="hidden"
+                                                   name="csrf_token"
+                                                   value="{{ csrf_token }}">
+                                            <input type="hidden"
+                                                   name="filter_status"
+                                                   value="{{ selected_status }}">
+                                            <input type="hidden"
+                                                   name="filter_severity"
+                                                   value="{{ selected_severity }}">
+                                            <input type="hidden"
+                                                   name="filter_q"
+                                                   value="{{ report_search }}">
+                                            <label class="form-label small"
+                                                   for="incident-note-{{ report.id }}">
+                                                Add internal note
+                                            </label>
+                                            <textarea id="incident-note-{{ report.id }}"
+                                                      name="note"
+                                                      class="form-control form-control-sm mb-2"
+                                                      rows="3"
+                                                      maxlength="2000"
+                                                      required></textarea>
+                                            <button type="submit"
+                                                    class="btn btn-outline-primary btn-sm">
+                                                Save Note
+                                            </button>
+                                        </form>
+                                    </div>
+                                </details>
+                            </td>
+
+
+                            <!-- Update Incident Status -->
+                            <td style="min-width: 220px;">
+
+                                <form method="POST"
+                                      action="{{ url_for('update_incident_status', report_id=report.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden"
+                                           name="filter_status"
+                                           value="{{ selected_status }}">
+                                    <input type="hidden"
+                                           name="filter_severity"
+                                           value="{{ selected_severity }}">
+                                    <input type="hidden"
+                                           name="filter_q"
+                                           value="{{ report_search }}">
+
+                                    <select name="status"
+                                            class="form-select form-select-sm mb-2"
+                                            required>
+
+                                        <option value="Pending"
+                                            {% if report.status == "Pending" %}selected{% endif %}>
+                                            Pending
+                                        </option>
+
+                                        <option value="Under Review"
+                                            {% if report.status == "Under Review" %}selected{% endif %}>
+                                            Under Review
+                                        </option>
+
+                                        <option value="Resolved"
+                                            {% if report.status == "Resolved" %}selected{% endif %}>
+                                            Resolved
+                                        </option>
+
+                                    </select>
+
+                                    <button type="submit"
+                                            class="btn btn-primary btn-sm w-100">
+                                        Update Status
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                            <!-- Update Incident Severity -->
+                            <td style="min-width: 220px;">
+
+                                <form method="POST"
+                                      action="{{ url_for('update_incident_severity', report_id=report.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden"
+                                           name="filter_status"
+                                           value="{{ selected_status }}">
+                                    <input type="hidden"
+                                           name="filter_severity"
+                                           value="{{ selected_severity }}">
+                                    <input type="hidden"
+                                           name="filter_q"
+                                           value="{{ report_search }}">
+
+                                    <select name="severity"
+                                            class="form-select form-select-sm mb-2"
+                                            required>
+
+                                        <option value="Unassigned"
+                                            {% if report.severity == "Unassigned" %}selected{% endif %}>
+                                            Unassigned
+                                        </option>
+                                        <option value="Low"
+                                            {% if report.severity == "Low" %}selected{% endif %}>
+                                            Low
+                                        </option>
+                                        <option value="Medium"
+                                            {% if report.severity == "Medium" %}selected{% endif %}>
+                                            Medium
+                                        </option>
+                                        <option value="High"
+                                            {% if report.severity == "High" %}selected{% endif %}>
+                                            High
+                                        </option>
+                                        <option value="Critical"
+                                            {% if report.severity == "Critical" %}selected{% endif %}>
+                                            Critical
+                                        </option>
+
+                                    </select>
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger btn-sm w-100">
+                                        Update Severity
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            {% if total_reports %}
+            <div class="alert alert-info mb-0">
+                No reports match the selected filters.
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">
+                No incident reports have been submitted yet.
+            </div>
+            {% endif %}
+
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

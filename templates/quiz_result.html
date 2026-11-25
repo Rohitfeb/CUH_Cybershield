@@ -1,0 +1,121 @@
+
+{% extends "base.html" %}
+
+{% block title %}Quiz Result - CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow p-4 mx-auto" style="max-width: 650px;">
+
+        <div class="text-center">
+            <h2 class="mb-3">Cyber Awareness Quiz Result</h2>
+            <p class="text-muted">
+                Your quiz has been submitted successfully!
+            </p>
+        </div>
+
+        <hr>
+
+        <div class="text-center mb-4">
+            <h5>Your Score</h5>
+
+            <h1 class="display-3 text-primary fw-bold">
+                {{ result.score }} / {{ result.total_questions }}
+            </h1>
+
+            <h4 class="text-success">
+                {{ result.percentage }}%
+            </h4>
+        </div>
+
+        <div class="mb-3">
+            <strong>Difficulty:</strong>
+            {{ result.difficulty }}
+        </div>
+
+        <div class="mb-4">
+            <strong>Performance:</strong>
+
+            {% if result.percentage >= 90 %}
+                <h4 class="text-success mt-2">Excellent!</h4>
+                <p>Outstanding performance. You have excellent cyber awareness.</p>
+
+            {% elif result.percentage >= 70 %}
+                <h4 class="text-success mt-2">Good!</h4>
+                <p>Good work! Keep learning to improve your cybersecurity knowledge.</p>
+
+            {% elif result.percentage >= 50 %}
+                <h4 class="text-warning mt-2">Average</h4>
+                <p>You are doing well, but you should practice more.</p>
+
+            {% else %}
+                <h4 class="text-danger mt-2">Needs Improvement</h4>
+                <p>Don't worry! Learn the basics and try the quiz again.</p>
+            {% endif %}
+        </div>
+
+        <hr>
+
+        <section class="mb-4">
+            <h3 class="h4 mb-3">Review Your Answers</h3>
+            <p class="text-muted">
+                Review your selection, the correct answer, and why it is correct.
+            </p>
+
+            {% if review_answers %}
+                {% for answer in review_answers %}
+                <article class="card mb-3 border-{{ 'success' if answer.is_correct else 'danger' }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <h4 class="h6 mb-0">
+                                Question {{ loop.index }}: {{ answer.question_text }}
+                            </h4>
+                            <span class="badge bg-{{ 'success' if answer.is_correct else 'danger' }}">
+                                {{ "Correct" if answer.is_correct else "Incorrect" }}
+                            </span>
+                        </div>
+
+                        <p class="mb-2">
+                            <strong>Your answer:</strong>
+                            <span class="{{ 'text-success' if answer.is_correct else 'text-danger' }}">
+                                {{ answer.selected_answer or "Not answered (time expired)" }}
+                            </span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Correct answer:</strong>
+                            {{ answer.correct_answer }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Explanation:</strong>
+                            {{ answer.explanation }}
+                        </p>
+                    </div>
+                </article>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    Detailed answer review is not available for this result.
+                    New quiz submissions include a full review.
+                </div>
+            {% endif %}
+        </section>
+
+        <hr>
+
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <a href="{{ url_for('quiz') }}"
+               class="btn btn-primary">
+                Retake Quiz
+            </a>
+
+            <a href="{{ url_for('student_dashboard') }}"
+               class="btn btn-outline-secondary">
+                Dashboard
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

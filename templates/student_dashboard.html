@@ -1,0 +1,175 @@
+
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="p-4 mb-4 rounded-3 text-white"
+         style="background: linear-gradient(135deg, #14213d, #2563eb);">
+
+        <h2>Welcome to CUH Cyber Shield!</h2>
+
+        <p class="mb-0">
+            Hello, {{ current_user.name }}.
+            Stay alert, stay secure and protect your digital identity.
+        </p>
+    </div>
+
+    <h3 class="mb-3">Student Dashboard</h3>
+
+    <p class="text-muted">
+        Access cybersecurity tools and awareness resources.
+    </p>
+
+    <div class="row g-4">
+
+        <!-- URL Checker -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">URL Phishing Detector</h5>
+                    <p>Analyze suspicious URLs using machine learning.</p>
+                    <a href="{{ url_for('url_checker') }}"
+                       class="btn btn-primary">
+                        Check URL
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Checker -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5>Email Security</h5>
+                    <p>Detect suspicious emails and phishing attempts.</p>
+                    <a href="{{ url_for('email_checker') }}"
+                       class="btn btn-primary">
+                        Check Email
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        
+        
+<!-- Incident Reporting -->
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Report Cyber Incident</h5>
+
+            <p>
+                Report suspicious activities and cyber incidents.
+            </p>
+
+            <a href="{{ url_for('report_incident') }}"
+               class="btn btn-danger">
+                Report Incident
+            </a>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- Awareness Quiz -->
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Cyber Awareness Quiz</h5>
+
+            <p class="card-text">
+                Test your cybersecurity knowledge through
+                interactive quizzes on phishing, passwords,
+                malware and online safety.
+            </p>
+
+            <a href="{{ url_for('quiz') }}"
+               class="btn btn-primary mb-2">
+                Start Quiz
+            </a>
+
+            <a href="{{ url_for('quiz_history') }}"
+               class="btn btn-outline-primary mb-2">
+                Quiz History
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Awareness Resources -->
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Cyber Awareness Resources</h5>
+            <p class="card-text">
+                Review practical guidance for passwords, phishing,
+                social engineering, malware and safer online habits.
+            </p>
+            <a href="{{ url_for('awareness') }}"
+               class="btn btn-outline-primary">
+                View Resources
+            </a>
+        </div>
+    </div>
+</div>
+
+        <!-- Profile -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5>My Profile</h5>
+                    <p><strong>Name:</strong> {{ current_user.name }}</p>
+                    <p><strong>Email:</strong> {{ current_user.email }}</p>
+                    <p><strong>Role:</strong> {{ current_user.role }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5>Account Security</h5>
+                    <p>Securely end your current session.</p>
+                    <a href="{{ url_for('logout') }}"
+                       class="btn btn-danger">
+                        Logout
+                    </a>
+                    <button type="button"
+                            class="btn btn-outline-danger mt-2"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#delete-account">
+                        Delete Account
+                    </button>
+                    <div id="delete-account" class="collapse mt-3">
+                        <form method="POST"
+                              action="{{ url_for('delete_account') }}">
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token }}">
+                            <label for="delete-password" class="form-label">
+                                Confirm password
+                            </label>
+                            <input id="delete-password"
+                                   name="password"
+                                   type="password"
+                                   class="form-control mb-2"
+                                   required>
+                            <button type="submit" class="btn btn-danger">
+                                Permanently Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

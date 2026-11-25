@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Coordinator Dashboard - CUH Cyber Shield{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Quiz Coordinator Dashboard</h2>
+            <p class="text-muted mb-0">Monitor cyber awareness quiz participation.</p>
+        </div>
+        <span class="badge bg-primary">Quiz Coordinator</span>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Matching Attempts</h6>
+                    <h2 class="text-primary">{{ total_attempts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Average Score</h6>
+                    <h2 class="text-success">{{ "%.2f"|format(average_percentage) }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Participants</h6>
+                    <h2 class="text-info">{{ participant_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Review quiz performance</h5>
+            <form method="GET"
+                  action="{{ url_for('quiz_coordinator_dashboard') }}"
+                  class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="difficulty-filter" class="form-label">
+                        Difficulty
+                    </label>
+                    <select id="difficulty-filter"
+                            name="difficulty"
+                            class="form-select">
+                        <option value=""
+                                {% if not selected_difficulty %}selected{% endif %}>
+                            All difficulties
+                        </option>
+                        {% for difficulty in ("Beginner", "Intermediate", "Advanced", "Mixed") %}
+                        <option value="{{ difficulty }}"
+                                {% if selected_difficulty == difficulty %}selected{% endif %}>
+                            {{ difficulty }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="student-filter" class="form-label">
+                        Student name or email
+                    </label>
+                    <input id="student-filter"
+                           name="student"
+                           type="search"
+                           maxlength="120"
+                           class="form-control"
+                           value="{{ student_search }}"
+                           placeholder="Search students">
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        Apply Filters
+                    </button>
+                    <a href="{{ url_for('quiz_coordinator_dashboard') }}"
+                       class="btn btn-outline-secondary">
+                        Clear
+                    </a>
+                    <a href="{{ url_for('export_quiz_report',
+                               difficulty=selected_difficulty,
+                               student=student_search) }}"
+                       class="btn btn-outline-success">
+                        Export CSV
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Quiz Attempts</h5>
+        </div>
+        <div class="card-body">
+            {% if attempts %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Email</th>
+                            <th>Difficulty</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in attempts %}
+                        <tr>
+                            <td>{{ attempt.user.name if attempt.user else "Unknown" }}</td>
+                            <td>{{ attempt.user.email if attempt.user else "N/A" }}</td>
+                            <td>{{ attempt.difficulty }}</td>
+                            <td>{{ attempt.score }}/{{ attempt.total_questions }}</td>
+                            <td>{{ "%.2f"|format(attempt.percentage) }}%</td>
+                            <td>
+                                {{ attempt.attempted_at_ist.strftime('%d-%m-%Y %I:%M %p') if attempt.attempted_at_ist else "N/A" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">
+                No quiz attempts match the selected filters.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

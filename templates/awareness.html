@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Cyber Awareness | CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+    <header class="p-4 mb-4 rounded-3 text-white"
+            style="background: linear-gradient(135deg, #14213d, #2563eb);">
+        <p class="text-uppercase mb-2">Cybersecurity learning resources</p>
+        <h1 class="h2">Stay Alert. Stay Secure.</h1>
+        <p class="mb-0">
+            Learn to recognize online threats and protect your personal,
+            academic and campus accounts.
+        </p>
+    </header>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Strong Passwords</h2>
+                    <p>Use a unique, long password for every account and enable multi-factor authentication.</p>
+                    <ul>
+                        <li>Prefer a passphrase of several unrelated words.</li>
+                        <li>Do not reuse passwords across campus and personal accounts.</li>
+                        <li>Use a trusted password manager.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Recognize Phishing</h2>
+                    <p>Unexpected urgency, unusual links and requests for credentials are common warning signs.</p>
+                    <ul>
+                        <li>Verify the sender through a known official channel.</li>
+                        <li>Check links before opening them.</li>
+                        <li>Never share passwords or one-time codes.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Safe Downloads</h2>
+                    <p>Download files only from trusted sources and keep devices updated.</p>
+                    <ul>
+                        <li>Avoid pirated or unofficial software.</li>
+                        <li>Inspect unexpected attachments before opening them.</li>
+                        <li>Use current antivirus and security updates.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Protect Your Identity</h2>
+                    <p>Limit personal information shared publicly and confirm privacy settings regularly.</p>
+                    <ul>
+                        <li>Verify contacts before sharing sensitive details.</li>
+                        <li>Be cautious about location and travel posts.</li>
+                        <li>Lock devices when left unattended.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Social Engineering</h2>
+                    <p>Attackers may impersonate staff, friends or support teams to gain trust or urgency.</p>
+                    <ul>
+                        <li>Pause before approving unusual requests.</li>
+                        <li>Confirm instructions using a separate channel.</li>
+                        <li>Do not bypass security procedures under pressure.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Report Suspicious Activity</h2>
+                    <p>Quick reporting helps administrators reduce risk for the wider campus community.</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('report_incident') }}" class="btn btn-danger">
+                            Report an Incident
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-danger">
+                            Login to Report
+                        </a>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('quiz') }}" class="btn btn-primary">
+            Test Your Knowledge
+        </a>
+    </div>
+</div>
+
+{% endblock %}

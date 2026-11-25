@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy | CUH Cyber Shield{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="h2 mb-4">Privacy and Data Use</h1>
+
+    <section class="mb-4">
+        <h2 class="h5">Information collected</h2>
+        <p>
+            CUH Cyber Shield stores account details, quiz attempts,
+            incident reports, and security audit events needed to operate
+            the platform.
+        </p>
+    </section>
+
+    <section class="mb-4">
+        <h2 class="h5">How information is used</h2>
+        <p>
+            Information is used for authentication, cybersecurity
+            awareness, incident response, role-based administration,
+            and system security monitoring.
+        </p>
+    </section>
+
+    <section class="mb-4">
+        <h2 class="h5">Account deletion</h2>
+        <p>
+            Authenticated students and faculty can delete their account
+            from the dashboard. Associated quiz attempts and incident
+            reports and uploaded evidence are removed with the account.
+        </p>
+    </section>
+
+    <section>
+        <h2 class="h5">Security</h2>
+        <p>
+            Passwords are hashed. Sensitive reset tokens expire and
+            become unusable after a password change. State-changing
+            requests are protected with CSRF validation.
+            Incident evidence is stored outside public static files and
+            can only be downloaded by incident-management staff.
+        </p>
+    </section>
+</div>
+{% endblock %}

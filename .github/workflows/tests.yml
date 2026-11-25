@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - name: Run application release checks
+        env:
+          DEPLOYMENT_ENV: production
+          SECRET_KEY: ci-release-check-secret-at-least-32-characters
+          RESET_BASE_URL: https://example.invalid
+          SESSION_COOKIE_SECURE: "1"
+          FLASK_DEBUG: "0"
+          DATABASE_URL: postgresql://user:pass@127.0.0.1/release_check
+          INCIDENT_UPLOAD_FOLDER: /var/lib/cuh-cybershield/incidents
+          MAIL_SERVER: smtp.example.invalid
+          MAIL_USERNAME: release-check@example.invalid
+          MAIL_DEFAULT_SENDER: release-check@example.invalid
+        run: python -m unittest tests.test_deployment tests.test_release -v

@@ -1,0 +1,157 @@
+
+{% extends "base.html" %}
+
+{% block title %}Report Cyber Incident | CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-dark text-white py-3">
+                    <h3 class="mb-0">Report a Cyber Incident</h3>
+                    <p class="mb-0 mt-2">
+                        Help us make our campus digitally safer.
+                    </p>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <p class="text-muted">
+                        If you notice any suspicious online activity,
+                        please submit the details below.
+                    </p>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close"
+                                            data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST"
+                          enctype="multipart/form-data"
+                          action="{{ url_for('report_incident') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Incident Type
+                            </label>
+
+                            <select class="form-select"
+                                    name="incident_type"
+                                    required>
+
+                                <option value="">Select incident type</option>
+                                <option value="Phishing Email"
+                                    {% if incident_type == "Phishing Email" %}selected{% endif %}>
+                                    Phishing Email
+                                </option>
+                                <option value="Suspicious Website"
+                                    {% if incident_type == "Suspicious Website" %}selected{% endif %}>
+                                    Suspicious Website
+                                </option>
+                                <option value="Fake Social Media Account"
+                                    {% if incident_type == "Fake Social Media Account" %}selected{% endif %}>
+                                    Fake Social Media Account
+                                </option>
+                                <option value="Online Fraud"
+                                    {% if incident_type == "Online Fraud" %}selected{% endif %}>
+                                    Online Fraud
+                                </option>
+                                <option value="Suspicious Call or Message"
+                                    {% if incident_type == "Suspicious Call or Message" %}selected{% endif %}>
+                                    Suspicious Call or Message
+                                </option>
+                                <option value="Account Hacking"
+                                    {% if incident_type == "Account Hacking" %}selected{% endif %}>
+                                    Account Hacking
+                                </option>
+                                <option value="Other"
+                                    {% if incident_type == "Other" %}selected{% endif %}>
+                                    Other
+                                </option>
+
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Incident Description
+                            </label>
+
+                            <textarea class="form-control"
+                                      name="description"
+                                      rows="5"
+                                      placeholder="Describe what happened..."
+                                      minlength="10"
+                                      maxlength="3000"
+                                      required>{{ description|default('', true) }}</textarea>
+
+                            <small class="text-muted">
+                                Minimum 10 characters. Maximum 3000 characters.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="incident-attachments"
+                                   class="form-label fw-bold">
+                                Supporting Evidence <span class="text-muted fw-normal">(optional)</span>
+                            </label>
+                            <input id="incident-attachments"
+                                   class="form-control"
+                                   type="file"
+                                   name="attachments"
+                                   multiple
+                                   aria-describedby="attachment-help">
+                            <small id="attachment-help" class="form-text text-muted">
+                                Attach up to {{ config.INCIDENT_UPLOAD_MAX_FILES }} files of any type,
+                                with a combined size up to 5 MB. Emails, screenshots, and other relevant
+                                evidence are accepted.
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Privacy Notice:</strong>
+                            Do not include passwords, OTPs, or other sensitive
+                            personal information. Evidence is stored privately
+                            and can only be downloaded by incident-management staff.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+
+                            <a href="{{ url_for('student_dashboard') }}"
+                               class="btn btn-outline-secondary">
+                                Back to Dashboard
+                            </a>
+
+                            <button type="submit" class="btn btn-danger">
+                                Submit Report
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

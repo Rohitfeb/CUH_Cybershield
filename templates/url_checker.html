@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUH Cyber Shield - URL Checker</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #12345a;
+            text-align: center;
+        }
+
+        p {
+            color: #555;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            box-sizing: border-box;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #12345a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e4f80;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .safe {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #12345a;
+            text-decoration: none;
+        }
+
+        .note {
+            font-size: 13px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>CUH Cyber Shield</h1>
+
+    <p>Intelligent Phishing URL Detection System</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('url_checker') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label for="url">Enter website URL:</label>
+
+        <input
+            type="text"
+            id="url"
+            name="url"
+            placeholder="https://example.com"
+            value="{{ submitted_url }}"
+            maxlength="2048"
+            required
+        >
+
+        <button type="submit">Analyze URL</button>
+
+    </form>
+
+    {% if result %}
+
+        <div class="result {{ 'danger' if result.is_phishing else 'safe' }}">
+
+            {% if result.is_phishing %}
+                <h2>Potential Phishing URL!</h2>
+                <p>This URL has been classified as potentially suspicious.</p>
+            {% else %}
+                <h2>Classified as Legitimate</h2>
+                <p>The model did not identify strong phishing indicators.</p>
+            {% endif %}
+
+            <h3>Prediction Scores</h3>
+
+            {% for label, probability in result.probabilities.items() %}
+                <p>{{ label }}: {{ probability }}%</p>
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+    <p class="note">
+        Note: This is an ML-based risk assessment, not a guarantee
+        that a website is safe. The application does not open submitted URLs.
+    </p>
+
+    <a class="back" href="{{ url_for('student_dashboard') }}">
+        Back to Dashboard
+    </a>
+
+</div>
+
+</body>
+</html>

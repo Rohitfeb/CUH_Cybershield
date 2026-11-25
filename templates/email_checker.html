@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Email Security Checker - CUH Cyber Shield{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm mx-auto" style="max-width: 900px;">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">Email Security Checker</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Paste an email or upload an <code>.eml</code> file to check for
+                common phishing indicators.
+            </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">
+                        Paste email content
+                    </label>
+                    <textarea id="email" name="email" class="form-control" rows="9"
+                              maxlength="50000"
+                              placeholder="Paste the email headers and message here...">{{ submitted_email }}</textarea>
+                    <div class="form-text">Maximum 50,000 characters.</div>
+                </div>
+
+                <div class="text-center text-muted mb-3">or</div>
+
+                <div class="mb-3">
+                    <label for="email_file" class="form-label fw-semibold">
+                        Upload an email file
+                    </label>
+                    <input id="email_file" name="email_file" class="form-control"
+                           type="file" accept=".eml,message/rfc822">
+                    <div class="form-text">
+                        .eml files only, up to 2 MB. Choose either pasted content
+                        or a file, not both.
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2">
+                    <strong>Stay safe:</strong> Detected links are displayed as
+                    text only. Do not click suspicious links. This checker uses
+                    simple indicators and cannot guarantee that an email is safe.
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Analyze Email
+                </button>
+            </form>
+
+            {% if result %}
+            <section class="mt-4" aria-live="polite">
+                {% if result.risk == "High" %}
+                    <div class="alert alert-danger">
+                {% elif result.risk == "Medium" %}
+                    <div class="alert alert-warning">
+                {% else %}
+                    <div class="alert alert-success">
+                {% endif %}
+                    <h5 class="alert-heading">{{ result.risk }} Risk</h5>
+                    <p class="mb-1">
+                        Indicator score: <strong>{{ result.score }}/100</strong>
+                    </p>
+                    {% if result.subject %}
+                        <p class="mb-1"><strong>Subject:</strong> {{ result.subject }}</p>
+                    {% endif %}
+                    {% if result.sender %}
+                        <p class="mb-1"><strong>From:</strong> {{ result.sender }}</p>
+                    {% endif %}
+                    {% if result.reply_to %}
+                        <p class="mb-1">
+                            <strong>Reply-To:</strong> {{ result.reply_to }}
+                        </p>
+                    {% endif %}
+                    <p class="mb-1">Links found: {{ result.link_count }}</p>
+                    {% if result.links %}
+                        <ul class="mb-2">
+                            {% for link in result.links %}
+                                <li><code>{{ link }}</code></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if result.matched_words %}
+                        <p class="mb-0">
+                            Trigger words: {{ result.matched_words | join(", ") }}
+                        </p>
+                    {% else %}
+                        <p class="mb-0">No common trigger words detected.</p>
+                    {% endif %}
+                </div>
+                <p class="small text-muted mb-0">
+                    A low score does not prove that the email is legitimate.
+                    Verify unexpected requests using a trusted contact method.
+                </p>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

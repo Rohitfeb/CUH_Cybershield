@@ -1,0 +1,48 @@
+
+{% extends "base.html" %}
+
+{% block title %}Cyber Awareness Quiz{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="text-center mb-4">
+        <h2>Cyber Awareness Quiz</h2>
+        <p>Test your cybersecurity knowledge and improve your awareness.</p>
+    </div>
+
+    <div class="card shadow-sm p-4">
+        <h5>Select Quiz Difficulty</h5>
+
+        <form method="POST" action="{{ url_for('start_quiz') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="mb-3">
+                <label class="form-label">Choose Difficulty</label>
+
+                <select name="difficulty" class="form-select" required>
+                    <option value="">Select difficulty</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                    <option value="Mixed">Mixed (All Levels)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Start Quiz
+            </button>
+        </form>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <strong>Quiz Rules:</strong>
+        <ul class="mb-0 mt-2">
+            <li>Each attempt contains 10 questions.</li>
+            <li>Time limit: 10 minutes.</li>
+            <li>Each correct answer gives 1 mark.</li>
+            <li>Choose the best answer for each question.</li>
+        </ul>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,911 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+
+        <div>
+            <h2 class="fw-bold">Admin Dashboard</h2>
+            <p class="text-muted">
+                Manage and monitor cyber incident reports and student quiz performance.
+            </p>
+        </div>
+
+        <span class="badge bg-dark fs-6 p-2">
+            Administrator
+        </span>
+
+    </div>
+
+
+    <!-- Total Incident Reports -->
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <h6 class="text-muted">Total Incident Reports</h6>
+
+                    <h2 class="fw-bold text-primary">
+                        {{ reports|length }}
+                    </h2>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Incident Management -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Cyber Incident Management</h5>
+        </div>
+
+        <div class="card-body">
+
+            {% if reports %}
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Reported By</th>
+                            <th>Email</th>
+                            <th>Incident Type</th>
+                            <th>Description</th>
+                            <th>Evidence</th>
+                            <th>Reported Date</th>
+                            <th>Status</th>
+                            <th>Update Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for report in reports %}
+
+                        <tr>
+
+                            <td>{{ report.id }}</td>
+
+                            <td>
+                                {{ report.user.name if report.user else "Unknown" }}
+                            </td>
+
+                            <td>
+                                {{ report.user.email if report.user else "N/A" }}
+                            </td>
+
+                            <td>
+                                {{ report.incident_type }}
+                            </td>
+
+                            <td>
+                                {{ report.description }}
+                            </td>
+
+                            <td>
+                                {% if report.attachments %}
+                                    {% for attachment in report.attachments %}
+                                        <a class="btn btn-sm btn-outline-primary mb-1"
+                                           href="{{ url_for('download_incident_attachment', attachment_id=attachment.id) }}">
+                                            Download
+                                        </a>
+                                        <small class="d-block text-muted">
+                                            {{ attachment.original_filename }}
+                                        </small>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if report.created_at %}
+                                    {{ report.created_at.strftime('%d-%m-%Y %I:%M %p') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+
+                            <td>
+
+                                {% if report.status == "Pending" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+
+                                {% elif report.status == "Under Review" %}
+
+                                    <span class="badge bg-info text-dark">
+                                        Under Review
+                                    </span>
+
+                                {% elif report.status == "Resolved" %}
+
+                                    <span class="badge bg-success">
+                                        Resolved
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        {{ report.status }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <form method="POST"
+                                      action="{{ url_for('update_incident_status', report_id=report.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                                    <select name="status"
+                                            class="form-select form-select-sm mb-2">
+
+                                        <option value="Pending"
+                                            {% if report.status == "Pending" %}selected{% endif %}>
+                                            Pending
+                                        </option>
+
+                                        <option value="Under Review"
+                                            {% if report.status == "Under Review" %}selected{% endif %}>
+                                            Under Review
+                                        </option>
+
+                                        <option value="Resolved"
+                                            {% if report.status == "Resolved" %}selected{% endif %}>
+                                            Resolved
+                                        </option>
+
+                                    </select>
+
+                                    <button type="submit"
+                                            class="btn btn-primary btn-sm">
+                                        Update
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="alert alert-info mb-0">
+                No incident reports have been submitted yet.
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <!-- Quiz Analytics Summary -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Cyber Awareness Quiz Analytics</h5>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <!-- Total Quiz Attempts -->
+                <div class="col-md-4 mb-3">
+
+                    <div class="card border-primary h-100">
+                        <div class="card-body">
+
+                            <h6 class="text-muted">
+                                Total Quiz Attempts
+                            </h6>
+
+                            <h3 class="fw-bold text-primary">
+                                {{ total_quiz_attempts }}
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- Total Students -->
+                <div class="col-md-4 mb-3">
+
+                    <div class="card border-success h-100">
+                        <div class="card-body">
+
+                            <h6 class="text-muted">
+                                Students Participated
+                            </h6>
+
+                            <h3 class="fw-bold text-success">
+                                {{ total_quiz_students }}
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- Average Percentage -->
+                <div class="col-md-4 mb-3">
+
+                    <div class="card border-info h-100">
+                        <div class="card-body">
+
+                            <h6 class="text-muted">
+                                Average Quiz Percentage
+                            </h6>
+
+                            <h3 class="fw-bold text-info">
+                                {{ average_quiz_percentage }}%
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Difficulty Wise Attempts -->
+            <h6 class="fw-bold mt-3 mb-3">
+                Difficulty-wise Quiz Attempts
+            </h6>
+
+            <div class="row">
+
+                <div class="col-md-3 col-6 mb-3">
+
+                    <div class="card bg-light text-center">
+                        <div class="card-body">
+
+                            <h6>Beginner</h6>
+
+                            <h3 class="text-success fw-bold">
+                                {{ beginner_attempts }}
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3 col-6 mb-3">
+
+                    <div class="card bg-light text-center">
+                        <div class="card-body">
+
+                            <h6>Intermediate</h6>
+
+                            <h3 class="text-primary fw-bold">
+                                {{ intermediate_attempts }}
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3 col-6 mb-3">
+
+                    <div class="card bg-light text-center">
+                        <div class="card-body">
+
+                            <h6>Advanced</h6>
+
+                            <h3 class="text-danger fw-bold">
+                                {{ advanced_attempts }}
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3 col-6 mb-3">
+
+                    <div class="card bg-light text-center">
+                        <div class="card-body">
+
+                            <h6>Mixed</h6>
+
+                            <h3 class="text-dark fw-bold">
+                                {{ mixed_attempts }}
+                            </h3>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Student Quiz Performance -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-dark text-white
+                    d-flex justify-content-between align-items-center flex-wrap">
+
+            <h5 class="mb-0">Student Quiz Performance</h5>
+
+            <a href="{{ url_for('export_quiz_report') }}"
+               class="btn btn-success btn-sm">
+
+                Export Quiz Report
+
+            </a>
+
+        </div>
+
+
+        <div class="card-body">
+
+
+            <!-- Difficulty Filter -->
+            <form method="GET"
+                  action="{{ url_for('admin_dashboard') }}"
+                  class="row g-2 mb-4 align-items-end">
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-bold">
+                        Filter by Difficulty
+                    </label>
+
+                    <select name="difficulty"
+                            class="form-select">
+
+                        <option value="All"
+                            {% if selected_difficulty == "All" %}selected{% endif %}>
+                            All Difficulties
+                        </option>
+
+                        <option value="Beginner"
+                            {% if selected_difficulty == "Beginner" %}selected{% endif %}>
+                            Beginner
+                        </option>
+
+                        <option value="Intermediate"
+                            {% if selected_difficulty == "Intermediate" %}selected{% endif %}>
+                            Intermediate
+                        </option>
+
+                        <option value="Advanced"
+                            {% if selected_difficulty == "Advanced" %}selected{% endif %}>
+                            Advanced
+                        </option>
+
+                        <option value="Mixed"
+                            {% if selected_difficulty == "Mixed" %}selected{% endif %}>
+                            Mixed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-auto">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Apply Filter
+                    </button>
+
+                    <a href="{{ url_for('admin_dashboard') }}"
+                       class="btn btn-secondary">
+                        Reset
+                    </a>
+
+                </div>
+
+            </form>
+
+
+            <!-- Quiz Performance Table -->
+            {% if paginated_quiz_attempts %}
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Difficulty</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Attempt Date And Time (IST)</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for attempt in paginated_quiz_attempts %}
+
+                        <tr>
+
+                            <td>
+                                {{ attempt.user.name if attempt.user else "Unknown" }}
+                            </td>
+
+                            <td>
+                                {{ attempt.user.email if attempt.user else "N/A" }}
+                            </td>
+
+                            <td>
+                                {{ attempt.difficulty }}
+                            </td>
+
+                            <td>
+                                {{ attempt.score }}/{{ attempt.total_questions }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ attempt.percentage }}%
+                                </strong>
+                            </td>
+
+                            <td>
+
+                                {% if attempt.attempted_at_ist %}
+
+                                    {{ attempt.attempted_at_ist.strftime('%d %b %Y, %I:%M %p') }}
+
+                                {% else %}
+
+                                    N/A
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Pagination Information -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap mt-3">
+
+                <p class="text-muted mb-2">
+                    Showing
+                    {{ (current_page - 1) * per_page + 1 }}
+                    to
+                    {{ [current_page * per_page, total_filtered_attempts]|min }}
+                    of
+                    {{ total_filtered_attempts }}
+                    quiz attempts
+                </p>
+
+                <!-- Pagination Buttons -->
+                <nav aria-label="Quiz performance pagination">
+
+                    <ul class="pagination pagination-sm mb-2">
+
+                        <!-- Previous Button -->
+                        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+
+                            <a class="page-link"
+                               href="{{ url_for('admin_dashboard', difficulty=selected_difficulty, page=current_page-1) }}">
+                                Previous
+                            </a>
+
+                        </li>
+
+                        <!-- Page Numbers -->
+                        {% for page_num in range(1, total_pages + 1) %}
+
+                        <li class="page-item {% if page_num == current_page %}active{% endif %}">
+
+                            <a class="page-link"
+                               href="{{ url_for('admin_dashboard', difficulty=selected_difficulty, page=page_num) }}">
+                                {{ page_num }}
+                            </a>
+
+                        </li>
+
+                        {% endfor %}
+
+                        <!-- Next Button -->
+                        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+
+                            <a class="page-link"
+                               href="{{ url_for('admin_dashboard', difficulty=selected_difficulty, page=current_page+1) }}">
+                                Next
+                            </a>
+
+                        </li>
+
+                    </ul>
+
+                </nav>
+
+            </div>
+
+            {% else %}
+
+            <div class="alert alert-info mb-0">
+                No quiz attempts found for this difficulty.
+            </div>
+
+            {% endif %}
+
+                </div> <!-- End card-body -->
+            </div> <!-- End Student Quiz Performance card -->
+        
+    
+<!-- Administrator Account Management -->
+<div class="card shadow-sm mb-4">
+
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Administrator Account Management</h5>
+    </div>
+
+    <div class="card-body">
+
+        <h6 class="fw-bold mb-3">Create New Administrator</h6>
+
+        <form method="POST" action="{{ url_for('create_admin') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           placeholder="Enter administrator name"
+                           required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email"
+                           name="email"
+                           class="form-control"
+                           placeholder="Enter email address"
+                           required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password"
+                           name="password"
+                           class="form-control"
+                           minlength="8"
+                           placeholder="Minimum 8 characters"
+                           required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Administrator Role</label>
+
+                    <select name="role" class="form-select" required>
+                        <option value="">Select Role</option>
+                        <option value="security_admin">
+                            Security Admin
+                        </option>
+                        <option value="quiz_coordinator">
+                            Quiz Coordinator
+                        </option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Create Administrator Account
+            </button>
+
+        </form>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold mb-3">Existing Administrator Accounts</h6>
+
+        {% if admin_users %}
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for admin in admin_users %}
+
+                    <tr>
+                        <td>{{ admin.id }}</td>
+                        <td>{{ admin.name }}</td>
+                        <td>{{ admin.email }}</td>
+
+                        <td>
+                            {% if admin.role == "security_admin" %}
+                                <span class="badge bg-danger">
+                                    Security Admin
+                                </span>
+                            {% elif admin.role == "quiz_coordinator" %}
+                                <span class="badge bg-primary">
+                                    Quiz Coordinator
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="alert alert-info mb-0">
+            No administrator accounts have been created yet.
+        </div>
+
+        {% endif %}
+
+        {% if current_user.role == "super_admin" %}
+        <hr class="my-4">
+        <h6 class="fw-bold mb-3">Change Student, Faculty, or Admin Accounts</h6>
+        <p class="text-muted">
+            Change accounts to Student, Faculty, Security Admin, or Quiz
+            Coordinator. Admin and Super Admin cannot be assigned as new roles.
+            Super Admin accounts cannot be changed here.
+        </p>
+
+        {% if manageable_users %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>New Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in manageable_users %}
+                    <tr>
+                        <td>{{ account.name }}</td>
+                        <td>{{ account.email }}</td>
+                        <td>{{ account.role|title }}</td>
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('change_user_role', user_id=account.id) }}"
+                                  class="d-flex gap-2">
+                                <input type="hidden"
+                                       name="csrf_token"
+                                       value="{{ csrf_token }}">
+                                <select name="role"
+                                        class="form-select"
+                                        aria-label="New role for {{ account.name }}"
+                                        required>
+                                    <option value="" selected disabled>
+                                        Select a role
+                                    </option>
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty</option>
+                                    <option value="security_admin">Security Admin</option>
+                                    <option value="quiz_coordinator">Quiz Coordinator</option>
+                                </select>
+                                <button type="submit"
+                                        class="btn btn-outline-primary text-nowrap">
+                                    Change Role
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if student_accounts_pages > 1 %}
+        <nav aria-label="Student and faculty account pages">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if student_accounts_page <= 1 %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('admin_dashboard', student_accounts_page=student_accounts_page-1, staff_accounts_page=staff_accounts_page, difficulty=selected_difficulty, page=current_page) }}">
+                        Previous
+                    </a>
+                </li>
+                {% for page_number in range(1, student_accounts_pages + 1) %}
+                <li class="page-item {% if page_number == student_accounts_page %}active{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('admin_dashboard', student_accounts_page=page_number, staff_accounts_page=staff_accounts_page, difficulty=selected_difficulty, page=current_page) }}">
+                        {{ page_number }}
+                    </a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if student_accounts_page >= student_accounts_pages %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('admin_dashboard', student_accounts_page=student_accounts_page+1, staff_accounts_page=staff_accounts_page, difficulty=selected_difficulty, page=current_page) }}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <p class="text-center text-muted">
+            Page {{ student_accounts_page }} of {{ student_accounts_pages }}
+            ({{ student_accounts_total }} accounts)
+        </p>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info mb-0">
+            There are no student, faculty, or admin accounts to change.
+        </div>
+        {% endif %}
+
+        <hr class="my-4">
+        <h6 class="fw-bold mb-3">
+            Change Existing Security Admin or Quiz Coordinator
+        </h6>
+        <p class="text-muted">
+            Change accounts to Student, Faculty, Security Admin, or Quiz
+            Coordinator. Admin and Super Admin cannot be assigned as new roles.
+            Super Admin accounts cannot be changed here.
+        </p>
+
+        {% if manageable_staff_users %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>New Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in manageable_staff_users %}
+                    <tr>
+                        <td>{{ account.name }}</td>
+                        <td>{{ account.email }}</td>
+                        <td>
+                            {% if account.role == "security_admin" %}
+                                Security Admin
+                            {% else %}
+                                Quiz Coordinator
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('change_user_role', user_id=account.id) }}"
+                                  class="d-flex gap-2">
+                                <input type="hidden"
+                                       name="csrf_token"
+                                       value="{{ csrf_token }}">
+                                <select name="role"
+                                        class="form-select"
+                                        aria-label="New role for {{ account.name }}"
+                                        required>
+                                    <option value="" selected disabled>
+                                        Select a role
+                                    </option>
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty</option>
+                                    <option value="security_admin">Security Admin</option>
+                                    <option value="quiz_coordinator">Quiz Coordinator</option>
+                                </select>
+                                <button type="submit"
+                                        class="btn btn-outline-warning text-nowrap">
+                                    Change Role
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if staff_accounts_pages > 1 %}
+        <nav aria-label="Security Admin and Quiz Coordinator account pages">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if staff_accounts_page <= 1 %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('admin_dashboard', student_accounts_page=student_accounts_page, staff_accounts_page=staff_accounts_page-1, difficulty=selected_difficulty, page=current_page) }}">
+                        Previous
+                    </a>
+                </li>
+                {% for page_number in range(1, staff_accounts_pages + 1) %}
+                <li class="page-item {% if page_number == staff_accounts_page %}active{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('admin_dashboard', student_accounts_page=student_accounts_page, staff_accounts_page=page_number, difficulty=selected_difficulty, page=current_page) }}">
+                        {{ page_number }}
+                    </a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if staff_accounts_page >= staff_accounts_pages %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('admin_dashboard', student_accounts_page=student_accounts_page, staff_accounts_page=staff_accounts_page+1, difficulty=selected_difficulty, page=current_page) }}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <p class="text-center text-muted">
+            Page {{ staff_accounts_page }} of {{ staff_accounts_pages }}
+            ({{ staff_accounts_total }} accounts)
+        </p>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info mb-0">
+            There are no Security Admin or Quiz Coordinator accounts to change.
+        </div>
+        {% endif %}
+        {% endif %}
+
+    </div>
+</div>
+
+            </div> <!-- End main container -->
+
+            {% endblock %}

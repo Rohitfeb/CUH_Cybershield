@@ -1,0 +1,69 @@
+
+{% extends "base.html" %}
+
+{% block title %}Home | CUH Cyber Shield{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <p class="tagline">CAMPUS CYBERSECURITY INITIATIVE</p>
+
+    <h1>Protect Your Digital Campus</h1>
+
+    <p class="description">
+        An intelligent cybersecurity platform designed
+        to identify phishing threats, report cyber incidents
+        and improve cybersecurity awareness.
+    </p>
+
+    <a href="{{ url_for('register') }}" class="primary-btn">
+        Get Started
+    </a>
+
+</section>
+
+<section id="features" class="features">
+
+    <h2>Our Security Services</h2>
+
+    <div class="feature-container">
+
+        <div class="feature-card">
+            <h3>URL Scanner</h3>
+            <p>Analyze suspicious URLs and identify potential phishing threats.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Email Security</h3>
+            <p>Analyze email messages to identify phishing attempts.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Incident Reporting</h3>
+            <p>Report suspicious cyber activities to administrators.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Cyber Awareness</h3>
+            <p>Learn online safety and improve cybersecurity knowledge.</p>
+            <a href="{{ url_for('awareness') }}" class="primary-btn mt-3">
+                Explore Resources
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+<section id="about" class="about">
+    <h2>About CUH Cyber Shield</h2>
+
+    <p>
+        CUH Cyber Shield aims to create a safer digital
+        environment through cybersecurity awareness,
+        threat identification and incident reporting.
+    </p>
+</section>
+
+{% endblock %}

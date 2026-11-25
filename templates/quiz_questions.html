@@ -1,0 +1,143 @@
+
+{% extends "base.html" %}
+
+{% block title %}Take Cyber Awareness Quiz{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+    <div class="text-center mb-4">
+        <h2>Cyber Awareness Quiz</h2>
+        <p class="text-muted">
+            Difficulty: <strong>{{ difficulty }}</strong>
+        </p>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Instructions:</strong>
+        <ul class="mb-0 mt-2">
+            <li>Total questions: 10</li>
+            <li>Time limit: 10 minutes</li>
+            <li>Each correct answer carries 1 mark.</li>
+            <li>Select one option for every question.</li>
+        </ul>
+    </div>
+
+    <div id="quiz-countdown"
+         class="alert alert-warning sticky-top"
+         role="timer"
+         aria-live="off"
+         data-remaining-seconds="{{ remaining_seconds }}">
+        <strong>Time remaining:</strong>
+        <span id="quiz-timer" class="fw-bold" aria-label="Time remaining">
+            10:00
+        </span>
+        <span class="ms-2">
+            Your answers will be submitted automatically at zero. Unanswered
+            questions will be marked incorrect.
+        </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_quiz') }}"
+          id="quizForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="timed_out" id="quiz-timed-out" value="0">
+
+        {% for question in questions %}
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Question {{ loop.index }}</h5>
+                    <span class="badge bg-primary">
+                        {{ question.difficulty }}
+                    </span>
+                </div>
+
+                <p class="fw-semibold">
+                    {{ question.question }}
+                </p>
+
+                {% for option in question.options %}
+                <div class="form-check mb-2">
+
+                    <input
+                        class="form-check-input"
+                        type="radio"
+                        name="answer_{{ question.id }}"
+                        value="{{ option }}"
+                        id="q{{ question.id }}_option{{ loop.index }}"
+                        required
+                    >
+
+                    <label class="form-check-label"
+                           for="q{{ question.id }}_option{{ loop.index }}">
+                        {{ option }}
+                    </label>
+
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+
+        {% endfor %}
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-success btn-lg">
+                Submit Quiz
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+(() => {
+    const timerPanel = document.getElementById("quiz-countdown");
+    const timerDisplay = document.getElementById("quiz-timer");
+    const timedOutInput = document.getElementById("quiz-timed-out");
+    const form = document.getElementById("quizForm");
+    if (!timerPanel || !timerDisplay || !timedOutInput || !form) return;
+
+    const duration = Number(timerPanel.dataset.remainingSeconds);
+    if (!Number.isFinite(duration) || duration <= 0) return;
+
+    const deadline = Date.now() + duration * 1000;
+    let submitted = false;
+    form.addEventListener("submit", () => {
+        submitted = true;
+    });
+
+    const updateTimer = () => {
+        const remaining = Math.max(
+            0,
+            Math.ceil((deadline - Date.now()) / 1000)
+        );
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+        timerDisplay.textContent =
+            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        if (remaining <= 60) {
+            timerPanel.classList.remove("alert-warning");
+            timerPanel.classList.add("alert-danger");
+        }
+
+        if (remaining === 0 && !submitted) {
+            submitted = true;
+            timedOutInput.value = "1";
+            timerDisplay.textContent = "00:00 — submitting answers";
+            form.submit();
+        }
+    };
+
+    updateTimer();
+    window.setInterval(updateTimer, 250);
+})();
+</script>
+
+{% endblock %}
